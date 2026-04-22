@@ -3,7 +3,408 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>소비자 효능 평가 시스템</title><!DOCTYPE html>
+<title>소비자 <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消费者功效评估系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#F7F3EE; --warm-white:#FDFAF6; --charcoal:#1C1C1E; --mid:#6B6B70;
+    --accent:#C8956C; --accent-light:#EDD9C8; --agree:#4A8C6F; --agree-light:#D4EAE0;
+    --disagree:#B85C5C; --border:#E8E0D6; --blue:#3B7DD8; --blue-light:#DDEAFC;
+    --purple:#7C5CBF; --purple-light:#EDE8F8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh;}
+  nav{background:var(--warm-white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 1px 8px rgba(0,0,0,0.05);}
+  .nav-logo{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:700;}
+  .nav-right{display:flex;align-items:center;gap:10px;}
+  .nav-tabs{display:flex;gap:2px;background:var(--cream);border-radius:10px;padding:4px;}
+  .tab-btn{border:none;background:transparent;font-family:'Noto Sans SC',sans-serif;font-size:13px;font-weight:600;color:var(--mid);padding:6px 14px;border-radius:7px;cursor:pointer;transition:all 0.2s;}
+  .tab-btn.active{background:var(--warm-white);color:var(--charcoal);box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+  .conn-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--cream);}
+  .conn-dot{width:7px;height:7px;border-radius:50%;background:var(--mid);}
+  .conn-dot.ok{background:#27AE60;} .conn-dot.err{background:var(--disagree);}
+  .page{display:none;} .page.active{display:block;}
+  .survey-wrap{max-width:620px;margin:0 auto;padding:32px 20px 100px;}
+  .survey-header{margin-bottom:28px;}
+  .survey-header h1{font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;margin-bottom:8px;}
+  .survey-header p{font-size:13px;color:var(--mid);line-height:1.9;}
+  .survey-header strong{color:var(--agree);}
+  .section-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--mid);margin-bottom:10px;}
+  .product-selector{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+  .product-chip{border:1.5px solid var(--border);background:var(--warm-white);border-radius:20px;padding:7px 18px;font-size:13px;font-weight:500;color:var(--mid);cursor:pointer;transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;}
+  .product-chip.selected{border-color:var(--accent);background:var(--accent-light);color:var(--charcoal);font-weight:700;}
+  .progress-bar-wrap{background:var(--warm-white);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+  .progress-label{font-size:12px;color:var(--mid);white-space:nowrap;}
+  .progress-track{flex:1;height:8px;background:var(--cream);border-radius:8px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#E8B89A);border-radius:8px;transition:width 0.4s;}
+  .progress-count{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;}
+  .question-card{background:var(--warm-white);border:1px solid var(--border);border-radius:16px;padding:22px 20px;margin-bottom:14px;transition:box-shadow 0.2s;}
+  .question-card:focus-within{box-shadow:0 0 0 2px var(--accent-light),0 4px 16px rgba(0,0,0,0.06);}
+  .q-num{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent);margin-bottom:8px;}
+  .q-text{font-size:14px;line-height:1.9;color:var(--charcoal);margin-bottom:18px;}
+  .score-row{display:flex;gap:5px;justify-content:space-between;}
+  .score-btn{flex:1;height:44px;border:1.5px solid var(--border);background:var(--cream);border-radius:10px;font-size:15px;font-weight:700;color:var(--mid);cursor:pointer;transition:all 0.18s;font-family:'Noto Sans SC',sans-serif;display:flex;align-items:center;justify-content:center;}
+  .score-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+  .score-btn[data-score="1"].chosen{background:#C0392B;border-color:#C0392B;color:#fff;}
+  .score-btn[data-score="2"].chosen{background:#E67E22;border-color:#E67E22;color:#fff;}
+  .score-btn[data-score="3"].chosen{background:#F39C12;border-color:#F39C12;color:#fff;}
+  .score-btn[data-score="4"].chosen{background:#95A5A6;border-color:#95A5A6;color:#fff;}
+  .score-btn[data-score="5"].chosen{background:#27AE60;border-color:#27AE60;color:#fff;}
+  .score-btn[data-score="6"].chosen{background:#2ECC71;border-color:#2ECC71;color:#fff;}
+  .score-btn[data-score="7"].chosen{background:#1ABC9C;border-color:#1ABC9C;color:#fff;}
+  .score-labels{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--mid);}
+  .submit-btn{width:100%;background:var(--charcoal);color:#fff;border:none;border-radius:14px;padding:16px;font-family:'Noto Sans SC',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .submit-btn:hover:not(:disabled){background:#333;transform:translateY(-1px);}
+  .submit-btn:disabled{background:var(--mid);cursor:not-allowed;}
+  .no-questions-msg{background:var(--warm-white);border:1.5px dashed var(--border);border-radius:14px;padding:40px 20px;text-align:center;color:var(--mid);font-size:13px;line-height:1.8;margin-bottom:16px;}
+  .login-wrap{max-width:400px;margin:80px auto;padding:0 20px;}
+  .login-card{background:var(--warm-white);border:1px solid var(--border);border-radius:20px;padding:40px 36px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+  .login-icon{font-size:40px;margin-bottom:16px;}
+  .login-card h2{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;margin-bottom:6px;}
+  .login-card p{font-size:13px;color:var(--mid);margin-bottom:28px;}
+  .login-input{width:100%;border:1.5px solid var(--border);background:var(--cream);border-radius:10px;padding:13px 16px;font-size:15px;font-family:'Noto Sans SC',sans-serif;color:var(--charcoal);margin-bottom:12px;outline:none;transition:border-color 0.2s;letter-spacing:3px;}
+  .login-input:focus{border-color:var(--accent);}
+  .login-btn{width:100%;background:var(--charcoal);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:all 0.2s;}
+  .login-btn:hover{background:#333;}
+  .login-error{color:var(--disagree);font-size:12px;margin-top:10px;display:none;}
+  .admin-wrap{max-width:980px;margin:0 auto;padding:28px 20px 80px;}
+  .admin-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+  .admin-header h1{font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;}
+  .admin-header p{font-size:12px;color:var(--mid);margin-top:4px;}
+  .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .sub-tabs{display:flex;gap:0;background:var(--warm-white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px;}
+  .sub-tab{flex:1;border:none;background:transparent;font-family:'Noto Sans SC',sans-serif;font-size:13px;font-weight:600;color:var(--mid);padding:12px 6px;cursor:pointer;transition:all 0.2s;border-right:1px solid var(--border);}
+  .sub-tab:last-child{border-right:none;}
+  .sub-tab.active{background:var(--charcoal);color:#fff;}
+  .sub-panel{display:none;} .sub-panel.active{display:block;}
+  .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .filter-chip{border:1.5px solid var(--border);background:var(--warm-white);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;color:var(--mid);cursor:pointer;transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;}
+  .filter-chip.active{border-color:var(--accent);background:var(--accent-light);color:var(--charcoal);}
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+  .kpi-card{background:var(--warm-white);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+  .kpi-val{font-family:'Noto Serif SC',serif;font-size:34px;font-weight:700;line-height:1;margin-bottom:6px;}
+  .kpi-val.accent{color:var(--accent);} .kpi-val.green{color:var(--agree);}
+  .kpi-label{font-size:12px;color:var(--mid);font-weight:500;}
+  .stat-card{background:var(--warm-white);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:14px;}
+  .stat-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;}
+  .stat-q-num{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent);margin-bottom:4px;}
+  .stat-q-text{font-size:13.5px;line-height:1.7;color:var(--charcoal);}
+  .stat-avg-badge{flex-shrink:0;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:8px 14px;text-align:center;min-width:68px;}
+  .stat-avg-num{font-family:'Noto Serif SC',serif;font-size:22px;font-weight:700;line-height:1;}
+  .stat-avg-label{font-size:10px;color:var(--mid);margin-top:3px;}
+  .divider-label{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .divider-label::after{content:'';flex:1;height:1px;background:var(--border);}
+  .bar-chart{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+  .bar-row{display:flex;align-items:center;gap:10px;}
+  .bar-score-label{width:16px;font-size:12px;font-weight:700;text-align:center;flex-shrink:0;}
+  .bar-track{flex:1;height:22px;background:var(--cream);border-radius:6px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;transition:width 0.7s cubic-bezier(.4,0,.2,1);}
+  .bar-pct{width:38px;font-size:12px;font-weight:600;color:var(--mid);text-align:right;flex-shrink:0;}
+  .bar-cnt{width:40px;font-size:11px;color:var(--mid);flex-shrink:0;}
+  .satisfaction-row{display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--border);}
+  .sat-label{font-size:12px;font-weight:700;color:var(--mid);white-space:nowrap;}
+  .sat-bar-track{flex:1;height:10px;background:var(--cream);border-radius:10px;overflow:hidden;}
+  .sat-bar-fill{height:100%;background:linear-gradient(90deg,var(--agree),#52D9A0);border-radius:10px;transition:width 0.8s cubic-bezier(.4,0,.2,1);}
+  .sat-pct{font-size:15px;font-weight:700;color:var(--agree);min-width:48px;text-align:right;}
+  .qmgr-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start;}
+  @media(max-width:640px){.qmgr-layout{grid-template-columns:1fr;}}
+  .product-sidebar{background:var(--warm-white);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:72px;}
+  .sidebar-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .sidebar-head span{font-size:12px;font-weight:700;color:var(--mid);}
+  .sidebar-add-btn{border:none;background:var(--blue);color:#fff;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all 0.2s;}
+  .sidebar-add-btn:hover{background:#2d6bbf;}
+  .product-side-list{padding:8px;}
+  .product-side-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all 0.2s;margin-bottom:2px;}
+  .product-side-item:hover{background:var(--cream);}
+  .product-side-item.active{background:var(--accent-light);border:1px solid var(--accent);}
+  .product-side-name{flex:1;font-size:13px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .product-side-item.active .product-side-name{color:var(--charcoal);}
+  .product-side-count{font-size:10px;font-weight:700;background:var(--cream);border-radius:10px;padding:2px 7px;color:var(--mid);flex-shrink:0;}
+  .product-side-item.active .product-side-count{background:var(--accent);color:#fff;}
+  .product-side-del{border:none;background:none;color:var(--border);cursor:pointer;font-size:14px;flex-shrink:0;line-height:1;padding:2px;transition:color 0.2s;}
+  .product-side-del:hover{color:var(--disagree);}
+  .qmgr-main{background:var(--warm-white);border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .qmgr-main-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .qmgr-product-title{display:flex;align-items:center;gap:10px;}
+  .qmgr-product-badge{background:var(--accent-light);color:var(--accent);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;}
+  .qmgr-product-name-input{border:1.5px solid var(--border);background:var(--cream);border-radius:8px;padding:6px 12px;font-size:14px;font-weight:700;font-family:'Noto Sans SC',sans-serif;color:var(--charcoal);outline:none;transition:border-color 0.2s;width:200px;}
+  .qmgr-product-name-input:focus{border-color:var(--accent);}
+  .add-q-btn{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;}
+  .add-q-btn:hover{background:#2d6bbf;transform:translateY(-1px);}
+  .no-product-selected{text-align:center;padding:60px 20px;color:var(--mid);}
+  .no-product-selected .icon{font-size:40px;margin-bottom:12px;}
+  .no-product-selected p{font-size:13px;line-height:1.8;}
+  .q-item{background:var(--cream);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;transition:all 0.2s;position:relative;}
+  .q-item.dragging{opacity:0.4;border-style:dashed;}
+  .q-item-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .q-drag-handle{color:var(--border);cursor:grab;font-size:18px;user-select:none;flex-shrink:0;}
+  .q-drag-handle:active{cursor:grabbing;}
+  .q-index{background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;flex-shrink:0;}
+  .q-item-actions{margin-left:auto;display:flex;gap:6px;}
+  .icon-btn{border:1.5px solid var(--border);background:var(--warm-white);border-radius:7px;padding:4px 9px;font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .icon-btn.del:hover{border-color:var(--disagree);background:#FEE2E2;}
+  .q-textarea{width:100%;border:1.5px solid var(--border);background:var(--warm-white);border-radius:9px;padding:10px 13px;font-size:13.5px;line-height:1.75;font-family:'Noto Sans SC',sans-serif;color:var(--charcoal);resize:vertical;min-height:72px;outline:none;transition:border-color 0.2s;}
+  .q-textarea:focus{border-color:var(--accent);}
+  .q-char-count{font-size:10px;color:var(--mid);margin-top:6px;}
+  .save-questions-btn{width:100%;background:var(--agree);color:#fff;border:none;border-radius:11px;padding:13px;font-size:14px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;margin-top:14px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .save-questions-btn:hover{background:#3d7a60;transform:translateY(-1px);}
+  .empty-q-hint{text-align:center;padding:32px 20px;color:var(--mid);border:1.5px dashed var(--border);border-radius:12px;margin-bottom:10px;}
+  .empty-q-hint .icon{font-size:32px;margin-bottom:8px;}
+  .empty-q-hint p{font-size:12px;line-height:1.7;}
+  .archive-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+  .archive-toolbar h2{font-size:15px;font-weight:700;}
+  .search-box-wrap{display:flex;gap:8px;align-items:center;background:var(--warm-white);border:1.5px solid var(--border);border-radius:12px;padding:10px 16px;margin-bottom:20px;transition:border-color 0.2s;}
+  .search-box-wrap:focus-within{border-color:var(--accent);}
+  .search-icon{font-size:16px;flex-shrink:0;}
+  .search-input{flex:1;border:none;background:transparent;outline:none;font-size:14px;font-family:'Noto Sans SC',sans-serif;color:var(--charcoal);}
+  .search-input::placeholder{color:var(--mid);}
+  .search-clear{border:none;background:none;color:var(--mid);cursor:pointer;font-size:16px;padding:0 2px;display:none;}
+  .archive-list{display:flex;flex-direction:column;gap:14px;}
+  .archive-card{background:var(--warm-white);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:box-shadow 0.2s;}
+  .archive-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+  .archive-card-header{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;border-bottom:1px solid transparent;transition:border-color 0.2s;}
+  .archive-card-header.open{border-bottom-color:var(--border);}
+  .archive-icon{width:40px;height:40px;border-radius:10px;background:var(--purple-light);color:var(--purple);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .archive-info{flex:1;min-width:0;}
+  .archive-name{font-size:15px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .archive-meta{font-size:11px;color:var(--mid);display:flex;gap:10px;flex-wrap:wrap;}
+  .archive-badges{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+  .badge.green{background:var(--agree-light);color:var(--agree);}
+  .badge.orange{background:var(--accent-light);color:var(--accent);}
+  .archive-chevron{color:var(--mid);font-size:18px;transition:transform 0.2s;flex-shrink:0;}
+  .archive-chevron.open{transform:rotate(180deg);}
+  .archive-body{display:none;padding:20px;}
+  .archive-body.open{display:block;}
+  .arch-q-row{background:var(--cream);border-radius:10px;padding:14px 16px;margin-bottom:8px;}
+  .arch-q-text{font-size:13px;line-height:1.6;color:var(--charcoal);margin-bottom:10px;}
+  .arch-sat-row{display:flex;align-items:center;gap:10px;}
+  .arch-sat-label{font-size:11px;font-weight:700;color:var(--mid);white-space:nowrap;}
+  .arch-sat-track{flex:1;height:8px;background:var(--border);border-radius:8px;overflow:hidden;}
+  .arch-sat-fill{height:100%;background:linear-gradient(90deg,var(--agree),#52D9A0);border-radius:8px;}
+  .arch-sat-pct{font-size:13px;font-weight:700;color:var(--agree);min-width:42px;text-align:right;}
+  .arch-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+  .del-arch-btn{border:1.5px solid #FDEAEA;background:transparent;color:var(--disagree);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all 0.2s;}
+  .del-arch-btn:hover{background:#FEE2E2;}
+  .empty-archive{text-align:center;padding:60px 20px;color:var(--mid);}
+  .empty-archive .icon{font-size:48px;margin-bottom:14px;}
+  .empty-archive p{font-size:14px;line-height:1.8;}
+  .no-result{text-align:center;padding:40px 20px;color:var(--mid);background:var(--warm-white);border:1px solid var(--border);border-radius:14px;}
+  .no-result .icon{font-size:32px;margin-bottom:10px;}
+  .no-result p{font-size:13px;}
+  .highlight{background:#FFF176;border-radius:2px;}
+  .action-btn{border:1.5px solid var(--border);background:var(--warm-white);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;color:var(--mid);cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all 0.2s;}
+  .action-btn:hover{border-color:var(--accent);color:var(--charcoal);}
+  .logout-btn{border:1.5px solid var(--border);background:transparent;color:var(--mid);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all 0.2s;}
+  .logout-btn:hover{border-color:var(--disagree);color:var(--disagree);}
+  .clear-btn{border:1.5px solid #FDEAEA;background:transparent;color:var(--disagree);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all 0.2s;}
+  .clear-btn:hover{background:#FDEAEA;}
+  .archive-save-btn{background:var(--purple);color:#fff;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  .archive-save-btn:hover{background:#6447a8;transform:translateY(-1px);}
+  .info-box{background:var(--blue-light);border:1px solid #B8D0F5;border-radius:10px;padding:12px 16px;font-size:12px;color:#1a4a8a;line-height:1.7;margin-bottom:16px;}
+  .loading-state,.empty-state{text-align:center;padding:60px 20px;color:var(--mid);}
+  .loading-state .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty-state .icon{font-size:40px;margin-bottom:12px;}
+  .empty-state p{font-size:14px;line-height:1.8;}
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--charcoal);color:#fff;padding:12px 24px;border-radius:30px;font-size:13px;font-weight:500;font-family:'Noto Sans SC',sans-serif;transition:transform 0.3s ease;z-index:999;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  @media(max-width:520px){.kpi-val{font-size:22px;}.score-btn{font-size:13px;height:38px;}nav{padding:0 12px;}.sub-tab{font-size:11px;padding:10px 3px;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">功效评估中心</span>
+  <div class="nav-right">
+    <span class="conn-badge"><span class="conn-dot" id="connDot"></span><span id="connText">连接中...</span></span>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('survey',this)">📋 问卷</button>
+      <button class="tab-btn" onclick="switchTab('admin',this)">⚙️ 管理员</button>
+    </div>
+  </div>
+</nav>
+
+<div id="page-survey" class="page active">
+  <div class="survey-wrap">
+    <div class="survey-header">
+      <h1>消费者功效评估</h1>
+      <p>请对每个项目按照 <strong>1分（完全不同意）</strong> ~ <strong>7分（非常同意）</strong> 进行评分。<br><strong>5·6·7分</strong> 计为同意（满意）。</p>
+    </div>
+    <div style="margin-bottom:20px">
+      <div class="section-label">选择测试产品</div>
+      <div class="product-selector" id="productSelector"></div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-label">已完成</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-count" id="progressCount">0 / 0</div>
+    </div>
+    <div id="questionsContainer"></div>
+    <button class="submit-btn" id="submitBtn" onclick="submitSurvey()"><span id="submitLabel">提交</span></button>
+  </div>
+</div>
+
+<div id="page-admin" class="page">
+  <div id="loginScreen">
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-icon">🔐</div>
+        <h2>管理员登录</h2>
+        <p>统计及题目管理仅限管理员访问</p>
+        <input class="login-input" type="password" id="pwInput" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="login-btn" onclick="doLogin()">登录</button>
+        <div class="login-error" id="loginError">⚠️ 密码不正确</div>
+      </div>
+    </div>
+  </div>
+  <div id="dashScreen" style="display:none;">
+    <div class="admin-wrap">
+      <div class="admin-header">
+        <div><h1>管理员面板</h1><p id="lastUpdated"></p></div>
+        <div class="header-actions"><button class="logout-btn" onclick="doLogout()">退出登录</button></div>
+      </div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchSubTab('stats',this)">📊 统计</button>
+        <button class="sub-tab" onclick="switchSubTab('archive',this)">🗂 存档</button>
+        <button class="sub-tab" onclick="switchSubTab('qmgr',this)">📝 题目管理</button>
+      </div>
+      <div id="panel-stats" class="sub-panel active">
+        <div style="display:flex;gap:8px;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-row" id="filterRow" style="margin-bottom:0;"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="archive-save-btn" onclick="saveToArchive()">🗂 保存结果</button>
+            <button class="action-btn" onclick="loadStats()">🔄 刷新</button>
+            <button class="clear-btn" onclick="clearData()">🗑 清除数据</button>
+          </div>
+        </div>
+        <div class="kpi-row" id="kpiRow"></div>
+        <div id="compareSection"></div>
+        <div id="statsContainer"></div>
+      </div>
+      <div id="panel-archive" class="sub-panel">
+        <div class="archive-toolbar">
+          <h2>已保存的测试结果</h2>
+          <span id="archiveCount" style="font-size:12px;color:var(--mid);"></span>
+        </div>
+        <div class="search-box-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" type="text" id="searchInput" placeholder="按产品名称搜索..." oninput="onSearch(this.value)">
+          <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+        </div>
+        <div class="archive-list" id="archiveList"></div>
+      </div>
+      <div id="panel-qmgr" class="sub-panel">
+        <div class="info-box">
+          💡 在左侧选择产品后，可以编辑该产品的问卷题目。每个产品拥有独立的题目列表。保存后立即反映到问卷中。
+        </div>
+        <div class="qmgr-layout">
+          <div class="product-sidebar">
+            <div class="sidebar-head">
+              <span>产品列表</span>
+              <button class="sidebar-add-btn" onclick="addProduct()">＋ 添加</button>
+            </div>
+            <div class="product-side-list" id="productSideList"></div>
+          </div>
+          <div class="qmgr-main" id="qmgrMain">
+            <div class="no-product-selected"><div class="icon">👈</div><p>请在左侧选择产品</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://aaaabocpzmwivizcoexj.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYWFib2Nwem13aXZpemNvZXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Mjc0MjgsImV4cCI6MjA5MjQwMzQyOH0.GEIET5Pp5C22uUPUpj0hqdki4ERcsOonr8iv9UXW5A4';
+const ADMIN_PASSWORD='admin1234';
+const AGREE_MIN=5;
+const BAR_COLORS={1:'#C0392B',2:'#E67E22',3:'#F39C12',4:'#95A5A6',5:'#27AE60',6:'#2ECC71',7:'#1ABC9C'};
+const SK_PRODUCTS='efficacy_v5_products';
+const SK_QUESTIONS='efficacy_v5_questions';
+const SK_ARCHIVE='efficacy_v5_archive';
+const DEFAULT_PRODUCTS=[{id:'p1',name:'产品 A'},{id:'p2',name:'产品 B'},{id:'p3',name:'产品 C'}];
+const DEFAULT_QUESTIONS={
+  p1:["涂抹测试产品后，感觉产品在面部皮肤上易于推开，涂抹均匀。","涂抹测试产品后，面部皮肤没有干燥感，反而感到水润，体现了产品的保湿效果。","总体上，对测试产品的使用感和效果感到满意。"],
+  p2:["使用测试产品后，感觉皮肤纹理明显变得柔软细腻。","测试产品能迅速被皮肤吸收，没有黏腻或油光感。","总体上，对测试产品的使用感和效果感到满意。"],
+  p3:["总体上，对测试产品的使用感和效果感到满意。"]
+};
+let PRODUCTS=JSON.parse(localStorage.getItem(SK_PRODUCTS))||[...DEFAULT_PRODUCTS];
+let QMAP=JSON.parse(localStorage.getItem(SK_QUESTIONS))||{...DEFAULT_QUESTIONS};
+let ARCHIVE=JSON.parse(localStorage.getItem(SK_ARCHIVE))||[];
+let currentSurveyProduct=PRODUCTS[0]?.id||null;
+let surveyAnswers=[];
+let filterProduct='全部';
+let allResponses=[];
+let selectedProductId=null;
+let editQList=[];
+let dragSrc=null;
+let searchKeyword='';
+
+function saveAll(){localStorage.setItem(SK_PRODUCTS,JSON.stringify(PRODUCTS));localStorage.setItem(SK_QUESTIONS,JSON.stringify(QMAP));}
+
+async function sbInsert(data){return fetch(`${SUPABASE_URL}/rest/v1/responses`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'},body:JSON.stringify(data)});}
+async function sbSelect(){const res=await fetch(`${SUPABASE_URL}/rest/v1/responses?select=*&order=submitted_at.desc`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});if(!res.ok)throw new Error();return res.json();}
+async function sbDelete(){return fetch(`${SUPABASE_URL}/rest/v1/responses?id=neq.00000000-0000-0000-0000-000000000000`,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});}
+async function checkConnection(){try{const res=await fetch(`${SUPABASE_URL}/rest/v1/responses?select=id&limit=1`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});document.getElementById('connDot').className='conn-dot '+(res.ok?'ok':'err');document.getElementById('connText').textContent=res.ok?'数据库已连接':'连接错误';}catch{document.getElementById('connDot').className='conn-dot err';document.getElementById('connText').textContent='连接错误';}}
+
+function buildSurvey(){const ps=document.getElementById('productSelector');ps.innerHTML='';if(!PRODUCTS.length){ps.innerHTML='<span style="font-size:13px;color:var(--mid);">暂无注册产品。</span>';document.getElementById('questionsContainer').innerHTML='';return;}PRODUCTS.forEach((p,i)=>{const chip=document.createElement('div');chip.className='product-chip'+(i===0?' selected':'');chip.dataset.pid=p.id;chip.textContent=p.name;chip.addEventListener('click',()=>{ps.querySelectorAll('.product-chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');currentSurveyProduct=p.id;renderSurveyQuestions();});ps.appendChild(chip);});currentSurveyProduct=PRODUCTS[0].id;renderSurveyQuestions();}
+
+function renderSurveyQuestions(){const qs=QMAP[currentSurveyProduct]||[];surveyAnswers=new Array(qs.length).fill(null);updateProgress();const container=document.getElementById('questionsContainer');container.innerHTML='';if(!qs.length){container.innerHTML=`<div class="no-questions-msg">📝 该产品暂无问卷题目。<br>请在管理员 → 题目管理中添加。</div>`;return;}qs.forEach((q,i)=>{const card=document.createElement('div');card.className='question-card';card.innerHTML=`<div class="q-num">第 ${i+1} 题 / 共 ${qs.length} 题</div><div class="q-text">${q}</div><div class="score-row" id="scores-${i}">${[1,2,3,4,5,6,7].map(s=>`<button class="score-btn" data-score="${s}" onclick="selectScore(${i},${s})">${s}</button>`).join('')}</div><div class="score-labels"><span>完全不同意</span><span>非常同意</span></div>`;container.appendChild(card);});}
+
+function selectScore(qi,score){surveyAnswers[qi]=score;document.querySelectorAll(`#scores-${qi} .score-btn`).forEach(b=>{b.classList.remove('chosen');b.textContent=b.dataset.score;});document.querySelector(`#scores-${qi} [data-score="${score}"]`).classList.add('chosen');updateProgress();}
+function updateProgress(){const done=surveyAnswers.filter(a=>a!==null).length,total=surveyAnswers.length;document.getElementById('progressFill').style.width=(total?done/total*100:0)+'%';document.getElementById('progressCount').textContent=`${done} / ${total}`;}
+async function submitSurvey(){if(!currentSurveyProduct){showToast('⚠️ 请选择产品。');return;}if(surveyAnswers.includes(null)||!surveyAnswers.length){showToast('⚠️ 请回答所有题目。');return;}const p=PRODUCTS.find(x=>x.id===currentSurveyProduct);const btn=document.getElementById('submitBtn'),lbl=document.getElementById('submitLabel');btn.disabled=true;lbl.textContent='提交中...';try{const qs=QMAP[currentSurveyProduct]||[];const res=await sbInsert({product:p?.name||currentSurveyProduct,product_id:currentSurveyProduct,answers:[...surveyAnswers],questions:qs});if(res.ok||res.status===201){showToast('✅ 提交成功！感谢您的参与。');renderSurveyQuestions();}else showToast('❌ 提交失败，请重试。');}catch{showToast('❌ 网络错误，请检查网络连接。');}btn.disabled=false;lbl.textContent='提交';}
+
+function doLogin(){if(document.getElementById('pwInput').value===ADMIN_PASSWORD){document.getElementById('loginScreen').style.display='none';document.getElementById('dashScreen').style.display='block';document.getElementById('loginError').style.display='none';document.getElementById('pwInput').value='';loadStats();renderProductSidebar();renderArchive();}else{document.getElementById('loginError').style.display='block';document.getElementById('pwInput').value='';document.getElementById('pwInput').focus();}}
+function doLogout(){document.getElementById('loginScreen').style.display='block';document.getElementById('dashScreen').style.display='none';}
+
+function renderProductSidebar(){const list=document.getElementById('productSideList');list.innerHTML='';if(!PRODUCTS.length){list.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--mid);">请添加产品</div>';return;}PRODUCTS.forEach(p=>{const qCount=(QMAP[p.id]||[]).length;const item=document.createElement('div');item.className='product-side-item'+(selectedProductId===p.id?' active':'');item.dataset.pid=p.id;item.innerHTML=`<span class="product-side-name">${p.name}</span><span class="product-side-count">${qCount}题</span><button class="product-side-del" onclick="event.stopPropagation();deleteProduct('${p.id}')" title="删除产品">✕</button>`;item.addEventListener('click',()=>selectProduct(p.id));list.appendChild(item);});}
+
+function selectProduct(pid){selectedProductId=pid;editQList=[...(QMAP[pid]||[])];renderProductSidebar();renderQmgrMain();}
+function renderQmgrMain(){const p=PRODUCTS.find(x=>x.id===selectedProductId);if(!p){document.getElementById('qmgrMain').innerHTML=`<div class="no-product-selected"><div class="icon">👈</div><p>请在左侧选择产品</p></div>`;return;}const main=document.getElementById('qmgrMain');main.innerHTML=`<div class="qmgr-main-head"><div class="qmgr-product-title"><span class="qmgr-product-badge">产品名称</span><input class="qmgr-product-name-input" id="prodNameInput" value="${p.name}" placeholder="输入产品名称" oninput="onProductNameInput(this.value)"></div><button class="add-q-btn" onclick="addQuestion()">＋ 添加题目</button></div><div id="qItemList"></div><button class="save-questions-btn" onclick="saveQmgr()">✅ 保存并更新问卷</button>`;renderQItemList();}
+function onProductNameInput(val){const p=PRODUCTS.find(x=>x.id===selectedProductId);if(p)p.name=val;}
+function renderQItemList(){const container=document.getElementById('qItemList');if(!container)return;container.innerHTML='';if(!editQList.length){container.innerHTML=`<div class="empty-q-hint"><div class="icon">📝</div><p>暂无题目。<br>请点击上方"＋ 添加题目"按钮添加。</p></div>`;return;}editQList.forEach((_,i)=>container.appendChild(makeQItem(i)));}
+function makeQItem(i){const div=document.createElement('div');div.className='q-item';div.draggable=true;div.innerHTML=`<div class="q-item-header"><span class="q-drag-handle">⠿</span><span class="q-index">第 ${i+1} 题</span><div class="q-item-actions"><button class="icon-btn del" onclick="deleteQuestion(${i})">🗑</button></div></div><textarea class="q-textarea" id="qt-${i}" oninput="editQList[${i}]=this.value;updateCharCount(${i})">${editQList[i]}</textarea><div class="q-char-count" id="qcc-${i}">${editQList[i].length}字</div>`;div.addEventListener('dragstart',e=>{dragSrc=i;div.classList.add('dragging');e.dataTransfer.effectAllowed='move';});div.addEventListener('dragend',()=>div.classList.remove('dragging'));div.addEventListener('dragover',e=>{e.preventDefault();});div.addEventListener('drop',e=>{e.preventDefault();if(dragSrc!=null&&dragSrc!==i){const t=editQList.splice(dragSrc,1)[0];editQList.splice(i,0,t);dragSrc=null;renderQItemList();}});return div;}
+function updateCharCount(i){const el=document.getElementById('qcc-'+i);if(el)el.textContent=editQList[i].length+'字';}
+function addQuestion(){editQList.push('请输入新题目。');renderQItemList();setTimeout(()=>{const i=editQList.length-1;const ta=document.getElementById('qt-'+i);if(ta){ta.focus();ta.select();}document.getElementById('qItemList')?.lastChild?.scrollIntoView({behavior:'smooth'});},50);}
+function deleteQuestion(i){if(!confirm(`确定要删除第 ${i+1} 题吗？`))return;editQList.splice(i,1);renderQItemList();}
+function saveQmgr(){if(!selectedProductId)return;if(editQList.filter(q=>!q.trim()).length>0){showToast('⚠️ 存在空题目，请填写内容。');return;}const nameInput=document.getElementById('prodNameInput');const p=PRODUCTS.find(x=>x.id===selectedProductId);if(p&&nameInput)p.name=nameInput.value.trim()||p.name;QMAP[selectedProductId]=[...editQList];saveAll();buildSurvey();renderProductSidebar();showToast('✅ 保存成功！已更新到问卷。');}
+function addProduct(){const newId='p_'+Date.now();PRODUCTS.push({id:newId,name:'新产品'});QMAP[newId]=[];saveAll();renderProductSidebar();selectProduct(newId);setTimeout(()=>{const ni=document.getElementById('prodNameInput');if(ni){ni.focus();ni.select();}},80);}
+function deleteProduct(pid){const p=PRODUCTS.find(x=>x.id===pid);if(!confirm(`确定要删除"${p?.name}"产品及其所有题目吗？`))return;PRODUCTS=PRODUCTS.filter(x=>x.id!==pid);delete QMAP[pid];saveAll();if(selectedProductId===pid){selectedProductId=null;editQList=[];}renderProductSidebar();renderQmgrMain();buildSurvey();showToast('🗑 已删除。');}
+
+function saveToArchive(){if(!allResponses.length){showToast('⚠️ 暂无可保存的数据。');return;}const products=[...new Set(allResponses.map(r=>r.product))].filter(Boolean);if(!confirm(`确定要将当前结果保存到存档吗？\n\n📦 产品：${products.join(', ')}\n👥 回答数：${allResponses.length}份`))return;const productSnapshots={};allResponses.forEach(r=>{const pid=r.product_id||'unknown';if(!productSnapshots[pid]){productSnapshots[pid]={name:r.product||pid,questions:r.questions||(QMAP[pid]||[]),responses:[]};}productSnapshots[pid].responses.push(r);});const productStats=Object.entries(productSnapshots).map(([pid,snap])=>{const qStats=snap.questions.map((q,qi)=>{const scores=snap.responses.map(r=>r.answers[qi]).filter(v=>v!=null);const avg=scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2):0;const satPct=scores.length?((scores.filter(s=>s>=AGREE_MIN).length/scores.length)*100).toFixed(1):0;return{text:q,avg:parseFloat(avg),satPct:parseFloat(satPct),count:scores.length};});const allSc=snap.responses.flatMap(r=>r.answers);return{pid,name:snap.name,count:snap.responses.length,avg:allSc.length?(allSc.reduce((a,b)=>a+b,0)/allSc.length).toFixed(2):0,satPct:allSc.length?((allSc.filter(s=>s>=AGREE_MIN).length/allSc.length)*100).toFixed(1):0,qStats};});const entry={id:Date.now(),name:products.join(' · '),products,productStats,totalCount:allResponses.length,savedAt:new Date().toISOString()};ARCHIVE.unshift(entry);localStorage.setItem(SK_ARCHIVE,JSON.stringify(ARCHIVE));showToast('🗂 已保存到存档！');renderArchive();}
+function deleteArchive(id){if(!confirm('确定要删除此存档结果吗？'))return;ARCHIVE=ARCHIVE.filter(a=>a.id!==id);localStorage.setItem(SK_ARCHIVE,JSON.stringify(ARCHIVE));renderArchive();showToast('🗑 已删除。');}
+function onSearch(val){searchKeyword=val.trim();document.getElementById('searchClear').style.display=val?'block':'none';renderArchive();}
+function clearSearch(){document.getElementById('searchInput').value='';document.getElementById('searchClear').style.display='none';searchKeyword='';renderArchive();}
+function hl(text,kw){if(!kw)return text;return text.replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="highlight">${m}</span>`);}
+function renderArchive(){const list=document.getElementById('archiveList');const countEl=document.getElementById('archiveCount');let filtered=ARCHIVE;if(searchKeyword)filtered=ARCHIVE.filter(a=>a.name.toLowerCase().includes(searchKeyword.toLowerCase())||a.products.some(p=>p.toLowerCase().includes(searchKeyword.toLowerCase())));countEl.textContent=searchKeyword?`"${searchKeyword}" 搜索结果：${filtered.length}条 / 共${ARCHIVE.length}条`:`共${ARCHIVE.length}条`;if(!ARCHIVE.length){list.innerHTML=`<div class="empty-archive"><div class="icon">🗂</div><p>暂无存档结果。<br>请在统计页面点击<strong>"保存结果"</strong>。</p></div>`;return;}if(!filtered.length){list.innerHTML=`<div class="no-result"><div class="icon">🔍</div><p>未找到与"${searchKeyword}"相关的结果。</p></div>`;return;}list.innerHTML='';filtered.forEach(entry=>{const d=new Date(entry.savedAt);const dateStr=d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});const timeStr=d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});const avgSat=(entry.productStats.reduce((a,b)=>a+parseFloat(b.satPct),0)/entry.productStats.length).toFixed(1);const satCls=avgSat>=70?'green':'orange';const card=document.createElement('div');card.className='archive-card';card.innerHTML=`<div class="archive-card-header" onclick="toggleArchiveCard(this,${entry.id})"><div class="archive-icon">📦</div><div class="archive-info"><div class="archive-name">${hl(entry.name,searchKeyword)}</div><div class="archive-meta"><span>📅 ${dateStr} ${timeStr}</span><span>👥 ${entry.totalCount}人回答</span><span>🧴 ${entry.products.length}个产品</span></div></div><div class="archive-badges"><span class="badge ${satCls}">平均满意率 ${avgSat}%</span><span class="archive-chevron" id="chev-${entry.id}">▾</span></div></div><div class="archive-body" id="body-${entry.id}">${renderArchiveBody(entry)}</div>`;list.appendChild(card);});}
+function toggleArchiveCard(h,id){const body=document.getElementById('body-'+id),chev=document.getElementById('chev-'+id);const open=body.classList.contains('open');body.classList.toggle('open',!open);h.classList.toggle('open',!open);chev.classList.toggle('open',!open);}
+function renderArchiveBody(entry){return entry.productStats.map(ps=>`<div style="margin-bottom:20px;"><div class="divider-label">🧴 ${ps.name} · ${ps.count}人 · 平均${ps.avg}分 · 满意率${ps.satPct}%</div>${ps.qStats.map((q,qi)=>`<div class="arch-q-row"><div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;">第 ${qi+1} 题</div><div class="arch-q-text">${q.text}</div><div class="arch-sat-row"><div class="arch-sat-label">满意率</div><div class="arch-sat-track"><div class="arch-sat-fill" style="width:${q.satPct}%"></div></div><div class="arch-sat-pct">${q.satPct}%</div><div style="margin-left:10px;font-family:'Noto Serif SC',serif;font-size:16px;font-weight:700;color:var(--accent);">${q.avg}分</div></div></div>`).join('')}</div>`).join('')+`<div class="arch-actions"><button class="del-arch-btn" onclick="deleteArchive(${entry.id})">🗑 删除此存档</button></div>`;}
+
+async function loadStats(){document.getElementById('statsContainer').innerHTML=`<div class="loading-state"><div class="spinner"></div><p>数据加载中...</p></div>`;document.getElementById('kpiRow').innerHTML='';document.getElementById('filterRow').innerHTML='';document.getElementById('compareSection').innerHTML='';try{allResponses=await sbSelect();renderStats();}catch{document.getElementById('statsContainer').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><p>数据加载失败，请检查网络连接。</p></div>`;}}
+function setFilter(p){filterProduct=p;renderStats();}
+function renderStats(){const productNames=['全部',...new Set(allResponses.map(r=>r.product))].filter(Boolean);const filtered=filterProduct==='全部'?allResponses:allResponses.filter(r=>r.product===filterProduct);document.getElementById('filterRow').innerHTML=productNames.map(p=>`<div class="filter-chip ${filterProduct===p?'active':''}" onclick="setFilter('${p}')">${p}</div>`).join('');if(!filtered.length){document.getElementById('kpiRow').innerHTML='';document.getElementById('compareSection').innerHTML='';document.getElementById('statsContainer').innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>暂无收集到的回答。</p></div>`;document.getElementById('lastUpdated').textContent='';return;}const last=new Date(filtered[0].submitted_at);document.getElementById('lastUpdated').textContent=`最近更新：${last.toLocaleDateString('zh-CN')} ${last.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})} · 共${allResponses.length}份`;const allSc=filtered.flatMap(r=>r.answers);document.getElementById('kpiRow').innerHTML=`<div class="kpi-card"><div class="kpi-val">${filtered.length}</div><div class="kpi-label">总回答数</div></div><div class="kpi-card"><div class="kpi-val accent">${(allSc.reduce((a,b)=>a+b,0)/allSc.length).toFixed(2)}</div><div class="kpi-label">整体平均分</div></div><div class="kpi-card"><div class="kpi-val green">${((allSc.filter(s=>s>=AGREE_MIN).length/allSc.length)*100).toFixed(1)}%</div><div class="kpi-label">整体满意率</div></div>`;document.getElementById('compareSection').innerHTML='';const sc=document.getElementById('statsContainer');sc.innerHTML='';const groups={};filtered.forEach(r=>{const key=r.product||'其他';if(!groups[key])groups[key]=[];groups[key].push(r);});Object.entries(groups).forEach(([pName,rows])=>{const pid=rows[0]?.product_id;const qs=rows[0]?.questions||(pid?QMAP[pid]||[]:[]);if(!qs.length)return;const groupHeader=document.createElement('div');groupHeader.className='divider-label';groupHeader.style.marginBottom='12px';groupHeader.innerHTML=`🧴 ${pName} <span style="font-weight:400;color:var(--mid);">(${rows.length}人回答)</span>`;sc.appendChild(groupHeader);qs.forEach((q,qi)=>{const scores=rows.map(r=>r.answers[qi]).filter(v=>v!=null);if(!scores.length)return;const avg=(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2);const satPct=((scores.filter(s=>s>=AGREE_MIN).length/scores.length)*100).toFixed(1);const maxCount=Math.max(...[1,2,3,4,5,6,7].map(s=>scores.filter(x=>x===s).length),1);const card=document.createElement('div');card.className='stat-card';card.innerHTML=`<div class="stat-card-header"><div><div class="stat-q-num">第 ${qi+1} 题</div><div class="stat-q-text">${q}</div></div><div class="stat-avg-badge"><div class="stat-avg-num">${avg}</div><div class="stat-avg-label">平均 / 7</div></div></div><div class="divider-label">分数分布</div><div class="bar-chart">${[1,2,3,4,5,6,7].map(s=>{const cnt=scores.filter(x=>x===s).length;const pct=((cnt/scores.length)*100).toFixed(0);return`<div class="bar-row"><div class="bar-score-label" style="color:${BAR_COLORS[s]}">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${(cnt/maxCount*100)}%;background:${BAR_COLORS[s]};opacity:${s>=AGREE_MIN?1:0.5}"></div></div><div class="bar-pct">${pct}%</div><div class="bar-cnt">${cnt}人</div></div>`;}).join('')}</div><div class="satisfaction-row"><div class="sat-label">满意率（5·6·7分）</div><div class="sat-bar-track"><div class="sat-bar-fill" style="width:${satPct}%"></div></div><div class="sat-pct">${satPct}%</div></div>`;sc.appendChild(card);});});}
+async function clearData(){if(!confirm('确定要删除所有回答数据吗？\n\n💡 请先点击"保存结果"备份数据！'))return;try{await sbDelete();allResponses=[];showToast('🗑 数据已清除。');renderStats();}catch{showToast('❌ 清除失败，请重试。');}}
+
+function switchTab(tab,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('page-'+tab).classList.add('active');el.classList.add('active');}
+function switchSubTab(panel,el){document.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));document.getElementById('panel-'+panel).classList.add('active');el.classList.add('active');if(panel==='qmgr')renderProductSidebar();}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+
+buildSurvey();
+checkConnection();
+</script>
+</body>
+</html>
+효능 평가 시스템</title><!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
