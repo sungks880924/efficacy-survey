@@ -196,6 +196,20 @@
   .empty-q-hint{text-align:center;padding:24px;color:var(--mid);border:1.5px dashed var(--border);border-radius:10px;margin-bottom:8px;}
   .empty-q-hint p{font-size:12px;line-height:1.7;}
 
+
+  /* 효능 입력 */
+  .efficacy-wrap{background:var(--cream);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+  .efficacy-title{font-size:12px;font-weight:700;color:var(--mid);margin-bottom:10px;letter-spacing:0.3px;}
+  .efficacy-checks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .efficacy-chip{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--border);background:var(--warm-white);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--mid);cursor:pointer;transition:all 0.2s;user-select:none;}
+  .efficacy-chip input{display:none;}
+  .efficacy-chip.checked{border-color:var(--agree);background:var(--agree-light);color:var(--agree);font-weight:700;}
+  .efficacy-extra{display:flex;gap:8px;align-items:center;}
+  .efficacy-input{flex:1;border:1.5px solid var(--border);background:var(--warm-white);border-radius:8px;padding:7px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;color:var(--charcoal);outline:none;transition:border-color 0.2s;}
+  .efficacy-input:focus{border-color:var(--agree);}
+  .efficacy-add-btn{border:none;background:var(--agree);color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;transition:all 0.2s;}
+  .efficacy-add-btn:hover{background:#3d7a60;}
+  .efficacy-selected{font-size:11px;color:var(--agree);margin-top:6px;font-weight:600;}
   /* 보관함 */
   .archive-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
   .archive-toolbar h2{font-size:15px;font-weight:700;}
@@ -452,6 +466,10 @@
       <input class="modal-input" type="text" id="rptSampleName" placeholder="예: 芮姜夫人柔光气垫霜">
     </div>
     <div class="modal-field">
+      <label>효능 항목 확인 (문항 관리에서 설정한 효능이 자동 반영됩니다)</label>
+      <div id="rptEfficacyPreview" style="font-size:12px;color:var(--agree);font-weight:600;padding:8px 12px;background:var(--agree-light);border-radius:8px;min-height:32px;"></div>
+    </div>
+    <div class="modal-field">
       <label>위탁단위 (委托单位)</label>
       <input class="modal-input" type="text" id="rptClient" placeholder="예: 科玛化妆品（无锡）有限公司">
     </div>
@@ -480,14 +498,15 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const ADMIN_PASSWORD = 'admin1234';
 const AGREE_MIN = 5;
 const BAR_COLORS = {1:'#C0392B',2:'#E67E22',3:'#F39C12',4:'#95A5A6',5:'#27AE60',6:'#2ECC71',7:'#1ABC9C'};
-const RADAR_MAX = 8; // 방사형 그래프 최대 문항 수
+const RADAR_MAX = 8; // 8개 이하 1개, 9개 이상 반반 분할
 
+const DEFAULT_EFFICACIES = ['保湿','美白','抗皱','遮瑕','持妆','舒缓','提亮','控油','修护','敏感肌适用'];
 const SK_PRODUCTS  = 'efficacy_v6_products';
 const SK_QUESTIONS = 'efficacy_v6_sections'; // {productId: [{name, questions:[]}]}
 const SK_ARCHIVE   = 'efficacy_v6_archive';
 
 /* ══ 기본 데이터 ══ */
-const DEFAULT_PRODUCTS = [{id:'p1',name:'제품 A'},{id:'p2',name:'제품 B'},{id:'p3',name:'제품 C'}];
+const DEFAULT_PRODUCTS = [{id:'p1',name:'제품 A',efficacies:[]},{id:'p2',name:'제품 B',efficacies:[]},{id:'p3',name:'제품 C',efficacies:[]}];
 const DEFAULT_SECTIONS = {
   p1:[
     {name:'사용 직후', questions:['테스트 제품을 바른 직후, 얼굴 피부에 쉽게 펴 발리며 균일하게 도포되는 느낌이 들었다.','테스트 제품을 바른 직후, 얼굴 피부가 건조하지 않고 수분감이 느껴져 보습 효과가 있다고 느꼈다.']},
@@ -590,7 +609,20 @@ function renderParticipants(){
 }
 
 /* ══ 보고서 모달 ══ */
-function openReportModal(){ document.getElementById('reportModal').classList.add('show'); }
+function openReportModal(){
+  // 현재 필터된 제품의 효능 표시
+  const productEffics=[];
+  allResponses.forEach(r=>{
+    const pid=r.product_id;
+    const p=PRODUCTS.find(x=>x.id===pid);
+    if(p&&p.efficacies&&p.efficacies.length){
+      p.efficacies.forEach(e=>{if(!productEffics.includes(e))productEffics.push(e);});
+    }
+  });
+  const prev=document.getElementById('rptEfficacyPreview');
+  if(prev) prev.textContent=productEffics.length?productEffics.join(' · '):'등록된 효능 없음 (문항 관리에서 설정하세요)';
+  document.getElementById('reportModal').classList.add('show');
+}
 function closeReportModal(){ document.getElementById('reportModal').classList.remove('show'); }
 
 async function generateReport(){
@@ -646,6 +678,15 @@ async function generateReport(){
       `${String(i+1).padStart(2,'0')} | ${p.initial} | ${p.age}세`
     ).join('\n');
 
+    // 제품 효능 수집
+    const allEfficacies=[];
+    Object.values(groups).forEach(rows=>{
+      const pid=rows[0]?.product_id;
+      const p=PRODUCTS.find(x=>x.id===pid);
+      if(p&&p.efficacies) p.efficacies.forEach(e=>{if(!allEfficacies.includes(e))allEfficacies.push(e);});
+    });
+    const efficacyStr = allEfficacies.length ? allEfficacies.join('、') : '데이터 기반으로 판단';
+
     const prompt = `당신은 화장품 기능성 평가 보고서 전문 작성자입니다.
 아래 설문 데이터를 바탕으로 중국어 소비자 테스트 보고서의 핵심 섹션들을 작성해주세요.
 
@@ -655,6 +696,7 @@ async function generateReport(){
 - 테스트 기간: ${period||'[기간]'}
 - 테스트 장소: ${location||'[장소]'}
 - 총 참여자: ${participants.length}명
+- 제품 효능 항목: ${efficacyStr}
 - 평균나이: ${avgAge}세 / 최소: ${minAge}세 / 최대: ${maxAge}세
 
 [설문 통계 결과]
@@ -687,7 +729,7 @@ ${participantList}
 [전체 테스트 기간 동안 불량반응 없음 내용]
 
 === 11. 结论 ===
-[각 시간대 데이터를 근거로 기능 효능 결론 작성. 만족도 높은 항목 위주로 功效 주장]
+[다음 효능 항목을 중심으로 결론 작성: ${efficacyStr}. 각 효능에 대해 해당 시간대 만족도 데이터를 근거로 功效 주장 작성]
 
 === 附件A 受试者情况 ===
 [참여자 번호/이니셜/성별미상/나이/완료여부 표 형식으로]`;
@@ -873,6 +915,12 @@ function renderQmgrMain(){
   const p=PRODUCTS.find(x=>x.id===selectedProductId);
   if(!p){document.getElementById('qmgrMain').innerHTML=`<div class="no-product-selected"><div class="icon">👈</div><p>왼쪽에서 제품을 선택해주세요</p></div>`;return;}
   const main=document.getElementById('qmgrMain');
+  const curEfficacies = p.efficacies||[];
+  const checksHTML = DEFAULT_EFFICACIES.map(e=>`
+    <label class="efficacy-chip ${curEfficacies.includes(e)?'checked':''}" onclick="toggleEfficacy('${e}',this)">
+      ${e}
+    </label>`).join('');
+  const selectedText = curEfficacies.length ? curEfficacies.join(', ') : '선택된 효능 없음';
   main.innerHTML=`
     <div class="qmgr-main-head">
       <div class="qmgr-product-title">
@@ -880,10 +928,64 @@ function renderQmgrMain(){
         <input class="qmgr-product-name-input" id="prodNameInput" value="${p.name}" oninput="onProductNameInput(this.value)">
       </div>
     </div>
+    <div class="efficacy-wrap">
+      <div class="efficacy-title">✨ 제품 효능 항목 (보고서 결론에 사용)</div>
+      <div class="efficacy-checks" id="efficacyChecks">${checksHTML}</div>
+      <div class="efficacy-extra">
+        <input class="efficacy-input" type="text" id="efficacyCustom" placeholder="직접 입력 (예: 12h持妆)" onkeydown="if(event.key==='Enter')addCustomEfficacy()">
+        <button class="efficacy-add-btn" onclick="addCustomEfficacy()">＋ 추가</button>
+      </div>
+      <div class="efficacy-selected" id="efficacySelected">선택됨: ${selectedText}</div>
+    </div>
     <div id="sectionList"></div>
     <button class="add-section-btn" onclick="addSection()">＋ 섹션(시간대) 추가</button>
     <button class="save-questions-btn" onclick="saveQmgr()">✅ 저장하고 설문에 반영하기</button>`;
   renderSectionList();
+}
+
+
+function toggleEfficacy(name, labelEl){
+  const p=PRODUCTS.find(x=>x.id===selectedProductId);
+  if(!p) return;
+  if(!p.efficacies) p.efficacies=[];
+  if(p.efficacies.includes(name)){
+    p.efficacies=p.efficacies.filter(e=>e!==name);
+    labelEl.classList.remove('checked');
+  } else {
+    p.efficacies.push(name);
+    labelEl.classList.add('checked');
+  }
+  updateEfficacySelected();
+}
+
+function addCustomEfficacy(){
+  const input=document.getElementById('efficacyCustom');
+  const val=input.value.trim();
+  if(!val) return;
+  const p=PRODUCTS.find(x=>x.id===selectedProductId);
+  if(!p) return;
+  if(!p.efficacies) p.efficacies=[];
+  if(!p.efficacies.includes(val)){
+    p.efficacies.push(val);
+    // 체크박스 UI에 추가
+    const checks=document.getElementById('efficacyChecks');
+    if(checks){
+      const label=document.createElement('label');
+      label.className='efficacy-chip checked';
+      label.innerHTML=val;
+      label.onclick=()=>toggleEfficacy(val,label);
+      checks.appendChild(label);
+    }
+    updateEfficacySelected();
+  }
+  input.value='';
+}
+
+function updateEfficacySelected(){
+  const p=PRODUCTS.find(x=>x.id===selectedProductId);
+  const el=document.getElementById('efficacySelected');
+  if(!el||!p) return;
+  el.textContent='선택됨: '+(p.efficacies&&p.efficacies.length?p.efficacies.join(', '):'선택된 효능 없음');
 }
 
 function onProductNameInput(val){const p=PRODUCTS.find(x=>x.id===selectedProductId);if(p)p.name=val;}
@@ -1072,7 +1174,14 @@ function renderStats(){
       secBlock.appendChild(secTitle);
 
       // 방사형 그래프 (8개 초과시 2개로 분할)
-      const chunks=chunkArray(sec.questions,RADAR_MAX);
+      // 분할: 8개 이하 1개, 9개 이상 반반 (앞쪽 +1)
+      let chunks;
+      if(sec.questions.length <= 8){
+        chunks=[sec.questions];
+      } else {
+        const half=Math.ceil(sec.questions.length/2);
+        chunks=[sec.questions.slice(0,half),sec.questions.slice(half)];
+      }
       const chunkStartIdxs=[];
       let tmp=0;
       chunks.forEach(ch=>{chunkStartIdxs.push(tmp);tmp+=ch.length;});
@@ -1092,8 +1201,8 @@ function renderStats(){
 
         const radarCard=document.createElement('div');
         radarCard.className='radar-card';
-        const legendHTML=chunkQs.map((q,i)=>`<div style="font-size:10px;color:var(--mid);margin-bottom:2px;"><strong style="color:var(--accent)">Q${startGlobal+i+1}</strong> ${q.length>30?q.substring(0,30)+'…':q}</div>`).join('');
-        radarCard.innerHTML=`<h4>${sec.name}${chunks.length>1?' ('+(ci+1)+'/'+chunks.length+')':''}</h4><canvas id="radar-${pName}-${si}-${ci}" width="300" height="300"></canvas><div style="margin-top:10px;text-align:left;">${legendHTML}</div>`;
+        const legendHTML=chunkQs.map((q,i)=>`<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;font-size:11px;line-height:1.5;"><strong style="color:var(--accent);flex-shrink:0;min-width:24px;">Q${startGlobal+i+1}</strong><span style="color:var(--mid);">${q}</span></div>`).join('');
+        radarCard.innerHTML=`<h4>${sec.name}${chunks.length>1?' ('+(ci+1)+'/'+chunks.length+')':''}</h4><canvas id="radar-${pName}-${si}-${ci}" width="300" height="300"></canvas><div style="margin-top:12px;text-align:left;border-top:1px solid var(--border);padding-top:10px;">${legendHTML}</div>`;
         radarWrap.appendChild(radarCard);
 
         // 차트 생성 (다음 프레임에)
