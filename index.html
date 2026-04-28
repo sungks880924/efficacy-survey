@@ -548,43 +548,59 @@ function saveAll(){
 async function saveConfigToSupabase(){
   try{
     const config = {products: PRODUCTS, smap: SMAP};
-    // upsert: id='config'인 행이 있으면 업데이트, 없으면 삽입
+    // 먼저 삭제 후 삽입 (upsert 대신 확실한 방법)
+    await fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.survey_config`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      }
+    });
     const res = await fetch(`${SUPABASE_URL}/rest/v1/app_config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Prefer': 'resolution=merge-duplicates'
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({id: 'survey_config', data: config, updated_at: new Date().toISOString()})
     });
-    if(!res.ok) throw new Error(await res.text());
+    if(!res.ok){
+      const err = await res.text();
+      throw new Error(err);
+    }
+    console.log('✅ Supabase 설정 저장 완료');
   } catch(e){
-    console.warn('Supabase 저장 실패, localStorage만 사용:', e.message);
+    console.warn('⚠️ Supabase 저장 실패:', e.message);
+    showToast('⚠️ 클라우드 저장 실패. 로컬에만 저장됨.');
   }
 }
 
 async function loadConfigFromSupabase(){
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.survey_config&select=data`, {
-      headers: {'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY}
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.survey_config&select=data,updated_at`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      }
     });
-    if(!res.ok) throw new Error();
+    if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
-    if(rows.length > 0 && rows[0].data){
+    if(rows && rows.length > 0 && rows[0].data){
       const config = rows[0].data;
       if(config.products && config.products.length > 0){
         PRODUCTS = config.products;
         SMAP = config.smap || {};
-        // localStorage도 업데이트
         localStorage.setItem(SK_PRODUCTS, JSON.stringify(PRODUCTS));
         localStorage.setItem(SK_QUESTIONS, JSON.stringify(SMAP));
+        console.log('✅ Supabase에서 설정 로드 완료. 제품:', PRODUCTS.length, '개');
         return true;
       }
     }
+    console.log('ℹ️ Supabase 설정 없음, localStorage 사용');
   } catch(e){
-    console.warn('Supabase 설정 로드 실패, localStorage 사용:', e.message);
+    console.warn('⚠️ Supabase 로드 실패, localStorage 사용:', e.message);
   }
   return false;
 }
@@ -1136,7 +1152,7 @@ function saveQmgr(){
   saveAll();
   buildSurvey();
   renderProductSidebar();
-  showToast('✅ 저장 완료! 설문에 반영되었습니다.');
+  showToast('✅ 저장 완료! 모든 기기에 반영됩니다.');
 }
 
 function addProduct(){
